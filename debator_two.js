@@ -26,6 +26,8 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
+
 const generateCharacterResponse = async (prompt) => {
     try {
         const completion = await groq.chat.completions.create({
@@ -57,7 +59,7 @@ client.on('messageCreate', async (message) => {
     if (message.content.startsWith('!botTwoIs')) {
 
         nameOfCharacterTwo = message.content.replace('!botTwoIs', '').trim();
-        botPrompt = "You are impersonating " + nameOfCharacterTwo + ". You will be given prompts which you will have to form arguments for or against, in a debate. Act and answer like that character would. Cursing is encouraged. Keep it to 20 words or shorter. ";
+        botPrompt = "You are impersonating " + nameOfCharacterTwo + ". You will be given prompts which you will have to form arguments for or against, in a debate. Act and answer like that character would. Cursing is encouraged. ";
         console.log("Bot Prompt: ", botPrompt)
         return message.reply({
             content: `I am now ${nameOfCharacterTwo}`,
@@ -65,7 +67,8 @@ client.on('messageCreate', async (message) => {
         // await message.channel.send(`I am now ${botPrompt}`);
     }
     else if (message.content.startsWith('!stop')) {
-        await delay(2000);
+        await delay(2500);
+
         return message.reply({
             content: "Boy, I'mma whoop the living shit out of you.",
         })
