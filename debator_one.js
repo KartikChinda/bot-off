@@ -22,14 +22,19 @@ let nameOfCharacterTwo = "";
 
 let isDebateActive = false;
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-const generateCharacterResponse = async (prompt, characterNumber) => {
+
+
+const generateCharacterResponse = async (prompt) => {
     try {
         const completion = await groq.chat.completions.create({
             messages: [
                 {
                     role: 'user',
-                    content: `Answer to this argument in a debate as the fictional character ${characterNumber === 1 ? nameOfCharacterOne : nameOfCharacterTwo} would. Keep it to 50 words or short. Insult the other person a lot. The argument is: ${prompt}`,
+                    content: `Answer to this argument in a debate as the fictional character ${nameOfCharacterOne} would. Keep it to 20 words or short. Insult the other person a lot. The argument is: ${prompt}`,
                 },
             ],
             model: "mixtral-8x7b-32768",
@@ -37,6 +42,7 @@ const generateCharacterResponse = async (prompt, characterNumber) => {
 
         const messageContent = completion.choices[0].message.content;
         console.log(messageContent);
+
         return messageContent;
     } catch (error) {
         console.log("Sorry, had trouble communicating with the GROQ API");
@@ -52,14 +58,15 @@ const generateCharacterResponse = async (prompt, characterNumber) => {
 client.on('messageCreate', async (message) => {
     // making sure the bot doesnt reply to it's own texts. 
     console.log(`Received message: ${message.content} from ${message.author.tag} in channel ${message.channel.id}`);
-    if (message.author.bot || !isDebateActive) {
-        console.log("I am returning");
-        return;
-    }
 
-    else if (message.content.startsWith('!stop')) {
+
+    if (message.content.startsWith('!stop')) {
+        console.log("Okay, stopping debate.")
         isDebateActive = false;
-        return;
+        await delay(2000);
+        return message.reply({
+            content: "Okay. I won, obviously.",
+        })
     }
     else if (message.content.startsWith('!botOneIs')) {
 
@@ -74,13 +81,29 @@ client.on('messageCreate', async (message) => {
     else if (message.content.startsWith('!debate')) {
         isDebateActive = true;
         const topic = message.content.replace('!debate', '').trim();
-        const characterResponse = await generateCharacterResponse(topic, 1);
+        const characterResponse = await generateCharacterResponse(topic);
         console.log(characterResponse);
+        await delay(2000);
         // await message.channel.send(characterResponse);
         return message.reply({
             content: characterResponse,
         })
     }
+    else if (message.author.id === client.user.id || isDebateActive === false) {
+        console.log("I am returning");
+        return;
+    }
+    else if (message.author.bot && message.author.id !== client.user.id) {
+        const argument = message.content;
+        const characterResponse = await generateCharacterResponse(argument);
+        console.log(characterResponse);
+        // await message.channel.send(characterResponse);
+        await delay(2000);
+        return message.reply({
+            content: characterResponse,
+        })
+    }
+
 });
 
 
